@@ -1,6 +1,6 @@
-Computer Vision Term Project
+# Computer Vision Term Project
 
-Members
+Group Members
 
-Mariana Lucio 
-Landon Pattison
+- Mariana Lucio 
+- Landon Pattison
