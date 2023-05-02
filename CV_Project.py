@@ -2,13 +2,22 @@ import cv2
 import numpy as np
 import os
 
-trainDirectory = 'C:/Users/maria/Computer Vision/ProjData/MiniTest'
-saveDirectory = 'C:/Users/maria/Computer Vision/ProjData/MiniTestResized'
-siftDirectory = 'C:/Users/maria/Computer Vision/ProjData/MiniSift'
-histDirectory = 'C:/Users/maria/Computer Vision/ProjData/MiniHist'
+trainDirectory = 'ProjData/MiniTest'
+saveDirectory = 'ProjData/MiniTestResized'
+siftDirectory = 'ProjData/MiniSift'
+histDirectory = 'ProjData/MiniHist'
 
 sizes = [(200, 200), (50, 50)]
 sift = cv2.SIFT_create()
+
+if not os.path.exists(saveDirectory):
+    os.makedirs(saveDirectory)
+
+if not os.path.exists(siftDirectory):
+    os.makedirs(siftDirectory)
+
+if not os.path.exists(histDirectory):
+    os.makedirs(histDirectory)
 
 # Pre-Processing 
 for imgName in os.listdir(trainDirectory):
