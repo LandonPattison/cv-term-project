@@ -1,6 +1,9 @@
 .DS_Store
 
 
-ProjData/MiniHist
-ProjData/MiniSift
-ProjData/MiniTestResized
+ProjData/TestResized
+ProjData/TrainResized
+ProjData/TestHist
+ProjData/TrainHist
+ProjData/TestSift
+ProjData/TrainSift
