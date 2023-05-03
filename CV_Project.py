@@ -55,21 +55,61 @@ def preprocess_data(input_directory, save_directory, sift_directory, hist_direct
                         sift_path = os.path.join(sift_subdir, f"{img_name.split('.')[0]}_{size[0]}x{size[1]}.npy")
                         np.save(sift_path, descriptor)
 
-
 # Pre-process Train data
 train_directory = 'ProjData/Train'
 train_save_directory = 'ProjData/TrainResized'
 train_sift_directory = 'ProjData/TrainSift'
 train_hist_directory = 'ProjData/TrainHist'
-preprocess_data(train_directory, train_save_directory, train_sift_directory, train_hist_directory)
+#preprocess_data(train_directory, train_save_directory, train_sift_directory, train_hist_directory)
 
 # Pre-process Test data
 test_directory = 'ProjData/Test'
 test_save_directory = 'ProjData/TestResized'
 test_sift_directory = 'ProjData/TestSift'
 test_hist_directory = 'ProjData/TestHist'
-preprocess_data(test_directory, test_save_directory, test_sift_directory, test_hist_directory)
+#preprocess_data(test_directory, test_save_directory, test_sift_directory, test_hist_directory)
 
+
+# 4A 50*50 KNN Calssifier
+train_features = [] 
+train_labels = [] 
+ 
+# Retrieving all the 50x50 train images from the resized directory
+for subdir in os.listdir(train_save_directory): 
+    subdir_path = os.path.join(train_save_directory, subdir) 
+    if os.path.isdir(subdir_path): 
+        for img_name in os.listdir(subdir_path): 
+            img_path = os.path.join(subdir_path, img_name) 
+            if "50x50" in img_name: 
+                img = cv2.imread(img_path)
+                feature_vector = img.flatten()
+                train_features.append(feature_vector)
+                train_labels.append(subdir)
+
+test_features = []
+test_labels = []
+
+# Retrieving all the 50x50 test images from the resized directory
+for subdir in os.listdir(test_save_directory):
+    subdir_path = os.path.join(test_save_directory, subdir)
+    if os.path.isdir(subdir_path):
+        for img_name in os.listdir(subdir_path):
+            img_path = os.path.join(subdir_path, img_name)
+            if "50x50" in img_name:  
+                img = cv2.imread(img_path)
+                feature_vector = img.flatten()
+                test_features.append(feature_vector)
+                test_labels.append(subdir)
+
+knn = KNeighborsClassifier(n_neighbors=3)
+knn.fit(train_features, train_labels)
+
+test_predictions = knn.predict(test_features) 
+
+print(classification_report(test_labels, test_predictions)) 
+
+
+"""
 # 4C. KNN Classifier
 def load_hist_data(hist_data_directory):
     data = []
@@ -99,7 +139,6 @@ predicted_labels = knn.predict(test_hist_data)
 print(classification_report(test_labels, predicted_labels))
 
 
-
 # 4D. SVM Classifier
 def load_sift_data(sift_directory):
     X = []
@@ -109,7 +148,7 @@ def load_sift_data(sift_directory):
         if os.path.isdir(subdir_path):
             for file_name in os.listdir(subdir_path):
                 file_path = os.path.join(subdir_path, file_name)
-                descriptor = np.load(file_path)
+                descriptor = np.load(file_path, allow_pickle=True) #added allow pickle
                 X.append(descriptor)
                 y.append(subdir)
     return X, y
@@ -138,6 +177,7 @@ y_pred = clf.predict(X_test_stacked)
 # Evaluate the performance of the classifier
 print(classification_report(y_test_stacked, y_pred))
 
+
 # Remode the directories
 shutil.rmtree('ProjData/TrainResized')
 shutil.rmtree('ProjData/TrainSift')
@@ -145,3 +185,4 @@ shutil.rmtree('ProjData/TrainHist')
 shutil.rmtree('ProjData/TestResized')
 shutil.rmtree('ProjData/TestSift')
 shutil.rmtree('ProjData/TestHist')
+"""
