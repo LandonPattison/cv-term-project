@@ -5,7 +5,11 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import normalize
 import collections
+from sklearn.svm import LinearSVC
+import shutil
 
+
+min_keypoints = 10
 def preprocess_data(input_directory, save_directory, sift_directory, hist_directory):
     sizes = [(200, 200), (50, 50)]
     sift = cv2.SIFT_create()
@@ -47,8 +51,10 @@ def preprocess_data(input_directory, save_directory, sift_directory, hist_direct
 
                     # 2. Extract SIFT features on ALL images and save the data.
                     key_points, descriptor = sift.detectAndCompute(resized, None)
-                    sift_path = os.path.join(sift_subdir, f"{img_name.split('.')[0]}_{size[0]}x{size[1]}.npy")
-                    np.save(sift_path, descriptor)
+                    if descriptor is not None and descriptor.shape[0] >= min_keypoints:  # Check if the descriptor array is not empty and has enough keypoints
+                        sift_path = os.path.join(sift_subdir, f"{img_name.split('.')[0]}_{size[0]}x{size[1]}.npy")
+                        np.save(sift_path, descriptor)
+
 
 # Pre-process Train data
 train_directory = 'ProjData/Train'
@@ -91,3 +97,51 @@ knn.fit(train_hist_data, train_labels)
 
 predicted_labels = knn.predict(test_hist_data)
 print(classification_report(test_labels, predicted_labels))
+
+
+
+# 4D. SVM Classifier
+def load_sift_data(sift_directory):
+    X = []
+    y = []
+    for subdir in os.listdir(sift_directory):
+        subdir_path = os.path.join(sift_directory, subdir)
+        if os.path.isdir(subdir_path):
+            for file_name in os.listdir(subdir_path):
+                file_path = os.path.join(subdir_path, file_name)
+                descriptor = np.load(file_path)
+                X.append(descriptor)
+                y.append(subdir)
+    return X, y
+
+# Stack descriptors and create a label array
+def stack_descriptors_and_labels(X, y):
+    stacked_descriptors = np.vstack(X)
+    labels = np.hstack([[label] * len(descriptors) for label, descriptors in zip(y, X)])
+    return stacked_descriptors, labels
+
+# Load SIFT features and labels for training and testing
+X_train, y_train = load_sift_data(train_sift_directory)
+X_test, y_test = load_sift_data(test_sift_directory)
+
+# Stack descriptors and create label arrays
+X_train_stacked, y_train_stacked = stack_descriptors_and_labels(X_train, y_train)
+X_test_stacked, y_test_stacked = stack_descriptors_and_labels(X_test, y_test)
+
+# Train a linear SVM classifier
+clf = LinearSVC()
+clf.fit(X_train_stacked, y_train_stacked)
+
+# Predict on test data
+y_pred = clf.predict(X_test_stacked)
+
+# Evaluate the performance of the classifier
+print(classification_report(y_test_stacked, y_pred))
+
+# Remode the directories
+shutil.rmtree('ProjData/TrainResized')
+shutil.rmtree('ProjData/TrainSift')
+shutil.rmtree('ProjData/TrainHist')
+shutil.rmtree('ProjData/TestResized')
+shutil.rmtree('ProjData/TestSift')
+shutil.rmtree('ProjData/TestHist')
