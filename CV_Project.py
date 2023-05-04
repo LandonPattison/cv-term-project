@@ -3,13 +3,15 @@ import numpy as np
 import os
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import normalize
 import collections
 from sklearn.svm import LinearSVC
 import shutil
 
-
 min_keypoints = 10
+# 1. For ALL training images, do the following pre-processing: 
 def preprocess_data(input_directory, save_directory, sift_directory, hist_directory):
     sizes = [(200, 200), (50, 50)]
     sift = cv2.SIFT_create()
@@ -103,12 +105,22 @@ for subdir in os.listdir(test_save_directory):
                 test_features.append(feature_vector)
                 test_labels.append(subdir)
 
+# Training the classifier
 knn = KNeighborsClassifier(n_neighbors=3)
 knn.fit(train_features, train_labels)
 
+# Results
 test_predictions = knn.predict(test_features) 
-print("Classification report for 4A:\n")
-print(classification_report(test_labels, test_predictions)) 
+accuracy = accuracy_score(test_labels, test_predictions)
+print("4A 50*50 KNN Classifier:")
+print("Accuracy: {:.2f}%".format(accuracy * 100))
+conf_matrix = confusion_matrix(test_labels, test_predictions)
+
+false_positive = conf_matrix[0,1] / (conf_matrix[0,0] + conf_matrix[0,1])
+print("False Positive Rate: {:.2f}%".format(false_positive * 100))
+
+false_negative = conf_matrix[1,0] / (conf_matrix[1,0] + conf_matrix[1,1])
+print("False Negative Rate: {:.2f}%\n".format(false_negative * 100))
 
 
 # 4C. KNN Classifier
@@ -135,10 +147,18 @@ test_hist_data = normalize(test_hist_data, norm='l1')
 knn = KNeighborsClassifier(n_neighbors=3)
 knn.fit(train_hist_data, train_labels)
 
-
+# Results
 predicted_labels = knn.predict(test_hist_data)
-print("Classification report for 4C:\n")
-print(classification_report(test_labels, predicted_labels))
+accuracy = accuracy_score(test_labels, predicted_labels)
+print("4C. Histogram KNN Classifier:")
+print("Accuracy: {:.2f}%".format(accuracy * 100))
+conf_matrix = confusion_matrix(test_labels, predicted_labels)
+
+false_positive = conf_matrix[0,1] / (conf_matrix[0,0] + conf_matrix[0,1])
+print("False Positive Rate: {:.2f}%".format(false_positive * 100))
+
+false_negative = conf_matrix[1,0] / (conf_matrix[1,0] + conf_matrix[1,1])
+print("False Negative Rate: {:.2f}%\n".format(false_negative * 100))
 
 
 # 4D. SVM Classifier
@@ -175,25 +195,40 @@ clf.fit(X_train_stacked, y_train_stacked)
 
 # Predict on test data
 y_pred = clf.predict(X_test_stacked)
-print("Classification report for 4D:\n")
-# Evaluate the performance of the classifier
-print(classification_report(y_test_stacked, y_pred))
+accuracy = accuracy_score(y_test_stacked, y_pred)
+print("4D. SIFT SVM Classifier:")
+print("Accuracy: {:.2f}%".format(accuracy * 100))
+conf_matrix = confusion_matrix(y_test_stacked , y_pred)
+
+false_positive = conf_matrix[0,1] / (conf_matrix[0,0] + conf_matrix[0,1])
+print("False Positive Rate: {:.2f}%".format(false_positive * 100))
+
+false_negative = conf_matrix[1,0] / (conf_matrix[1,0] + conf_matrix[1,1])
+print("False Negative Rate: {:.2f}%\n".format(false_negative * 100))
 
 
 #4B SIFT features KNN
 A_train, B_train = load_sift_data(train_sift_directory)
 A_test, B_test = load_sift_data(test_sift_directory)
 
-A_train_stacked, B_train_stacked = stack_descriptors_and_labels(X_train, y_train)
-A_test_stacked, B_test_stacked = stack_descriptors_and_labels(X_test, y_test)
+A_train_stacked, B_train_stacked = stack_descriptors_and_labels(A_train, B_train)
+A_test_stacked, B_test_stacked = stack_descriptors_and_labels(A_test, B_test)
 
 knn = KNeighborsClassifier(n_neighbors=5)
 knn.fit(A_train_stacked, B_train_stacked)
 
 y_pred = knn.predict(A_test_stacked)
-report = classification_report(B_test_stacked, y_pred)
-print("Classification report for 4B:\n")
-print(report)
+accuracy = accuracy_score(B_test_stacked, y_pred)
+print("4B. SIFT features KNN Classifier:")
+print("Accuracy: {:.2f}%".format(accuracy * 100))
+conf_matrix = confusion_matrix(B_test_stacked, y_pred)
+
+false_positive = conf_matrix[0,1] / (conf_matrix[0,0] + conf_matrix[0,1])
+print("False Positive Rate: {:.2f}%".format(false_positive * 100))
+
+false_negative = conf_matrix[1,0] / (conf_matrix[1,0] + conf_matrix[1,1])
+print("False Negative Rate: {:.2f}%\n".format(false_negative * 100))
+
 
 # Remode the directories
 shutil.rmtree('ProjData/TrainResized')
