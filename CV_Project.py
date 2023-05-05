@@ -35,10 +35,13 @@ def preprocess_data(input_directory, save_directory, sift_directory, hist_direct
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
                 # Adjust the brightness if necessary
-                averageB = np.mean(gray)
-                if averageB < 0.4:
+                average = np.mean(gray)
+
+                # if average brightness is less than 0.4, increase brightness
+                if average < 0.4:
                     gray = cv2.addWeighted(gray, 1.5, np.zeros(gray.shape, dtype=gray.dtype), 0, 0)
-                elif averageB > 0.6:
+                # if average brightness is greater than 0.6, reduce brightness)
+                elif average > 0.6:
                     gray = cv2.addWeighted(gray, 0.5, np.zeros(gray.shape, dtype=gray.dtype), 0, 0)
 
                 # b. Resize the image to TWO different sizes: 200*200 and 50*50 and save them.
@@ -53,7 +56,7 @@ def preprocess_data(input_directory, save_directory, sift_directory, hist_direct
 
                     # 2. Extract SIFT features on ALL images and save the data.
                     key_points, descriptor = sift.detectAndCompute(resized, None)
-                    if descriptor is not None and descriptor.shape[0] >= min_keypoints:  # Check if the descriptor array is not empty and has enough keypoints
+                    if descriptor is not None and descriptor.shape[0] >= min_keypoints:
                        sift_path = os.path.join(sift_subdir, f"{img_name.split('.')[0]}_{size[0]}x{size[1]}.npy")
                        np.save(sift_path, descriptor)
 
